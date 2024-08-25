@@ -7,18 +7,18 @@ const wordsGrid = [
   // Your wordsGrid data here
 ];
 
-const AfterTest = ({ username, score, age, correctWords, incorrectWords }) => {
-  console.log('Received props:', { username, score, age, correctWords, incorrectWords });
+const AfterTest = ({ username, score, age, correctWords, incorrectWords, continuousSequence }) => {
+  console.log('Received props:', { username, score, age, correctWords, incorrectWords, continuousSequence });
   const navigate = useNavigate();
 
   // Debugging: Check received props
   useEffect(() => {
-    console.log("Received props:", { username, score, age, correctWords, incorrectWords });
-  }, [username, score, age, correctWords, incorrectWords]);
+    console.log("Received props:", { username, score, age, correctWords, incorrectWords, continuousSequence });
+  }, [username, score, age, correctWords, incorrectWords, continuousSequence]);
 
   // Calculate tableData with debugging
   const tableData = useMemo(() => {
-    const sequence = correctWords.every(word => wordsGrid.flat().includes(word));
+    const sequence = continuousSequence !== undefined ? continuousSequence : correctWords.every(word => wordsGrid.flat().includes(word));
     console.log("Table Data Calculation:", { correctWords, incorrectWords, sequence, score });
     return {
       correctWords,
@@ -26,7 +26,7 @@ const AfterTest = ({ username, score, age, correctWords, incorrectWords }) => {
       continuousSequence: sequence,
       score: score,
     };
-  }, [correctWords, incorrectWords, score]);
+  }, [correctWords, incorrectWords, continuousSequence, score]);
 
   // Debugging: Check tableData
   useEffect(() => {
