@@ -258,9 +258,9 @@ function Test() {
       )}
       {!givingTest && response && (
   <AfterTest
-    username={response ? response.name : ''}
+    username={response.name}
     score={response ? response.score : 0}
-    age={response ? response.age : 0}
+    age={age}
     correctWords={response ? response.correctWords : []}
     incorrectWords={response ? response.incorrectWords : []}
     continuousSequence={response ? response.continuousSequence : true} // Pass continuousSequence prop
