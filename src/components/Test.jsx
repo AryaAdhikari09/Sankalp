@@ -102,7 +102,6 @@ function Test() {
       alert('An error occurred while fetching data.');
     }
   };
-
   const filterSpeltWords = (arr) => {
     const filtered = [];
 
@@ -223,7 +222,7 @@ function Test() {
     }
   
     const tempAge = getReadingAge(score);
-    return { score, age: tempAge, correctWords, incorrectWords, continuousSequence: rowWise || false };
+    return { score, age: tempAge, correctWords, incorrectWords, continuousSequence: rowWise };
   };
   
 
@@ -259,14 +258,15 @@ function Test() {
       )}
       {!givingTest && response && (
   <AfterTest
-    username={username}
-    score={response.score}
-    age={age}
-    correctWords={response.correctWords}
-    incorrectWords={response.incorrectWords}
-    continuousSequence={response && response.continuousSequence}
+    username={response ? response.name : ''}
+    score={response ? response.score : 0}
+    age={response ? response.age : 0}
+    correctWords={response ? response.correctWords : []}
+    incorrectWords={response ? response.incorrectWords : []}
+    continuousSequence={response ? response.continuousSequence : true} // Pass continuousSequence prop
   />
 )}
+
     </>
   );
 }
