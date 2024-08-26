@@ -258,15 +258,14 @@ function Test() {
       )}
       {!givingTest && response && (
   <AfterTest
-    username={response.name}
-    score={response ? response.score : 0}
+    username={username}
+    score={response.score}
     age={age}
-    correctWords={response ? response.correctWords : []}
-    incorrectWords={response ? response.incorrectWords : []}
-    continuousSequence={response ? response.continuousSequence : true} // Pass continuousSequence prop
+    correctWords={response.correctWords}
+    incorrectWords={response.incorrectWords}
+    continuousSequence={response.continuousSequence}
   />
 )}
-
     </>
   );
 }
