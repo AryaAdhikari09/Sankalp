@@ -62,54 +62,44 @@ function Test() {
   const handlesubmit = async () => {
     console.log("Original Transcript:", transcript);
     setGivingTest(false);
-
-    // Split transcript into words
+  
     let arr = transcript.split(" ");
-
-    // Filter out words that are entirely uppercase (likely spelled out)
-    arr = arr.filter((word) => {
-      if (word === word.toUpperCase()) {
-        console.log(`Spelt out word detected: ${word}, excluded.`);
-        return false;
-      }
-      return true;
-    });
-
-    // Clean up the remaining words
-    arr = arr.map((str) => str.replace(/[^a-zA-Z]/g, "").toLowerCase());
-
-    console.log("Cleaned Words Array:", arr); // Debugging output
-
-    // Proceed to check the remaining words
-    const { score, age, correctWords, incorrectWords } = await checkWords(arr);
-
+    arr = arr.filter((word) => word !== word.toUpperCase()).map((str) => str.replace(/[^a-zA-Z]/g, "").toLowerCase());
+  
+    const { score, age, correctWords, incorrectWords, continuousSequence } = await checkWords(arr);
+  
     setScore(score);
     setAge(age);
-    console.log("Final Score:", score); // Log the final score
-    console.log("Reading Age:", age); // Log the reading age
-
-    const responseFromApi = await fetch(`${backendIp}/api/result/create`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: username,
-        score,
-        age,
-        correctWords,
-        incorrectWords,
-      }), // Send correct and incorrect words
-    });
-
-    if (responseFromApi.status === 200) {
-      const data = await responseFromApi.json();
-      console.log("Response Data:", data); // Log the response data
-      setResponse(data); // Set the response state
-    } else {
-      const data = await responseFromApi.json();
-      console.error("Error Response:", data); // Log any error response
-      alert(data.message);
+  
+    try {
+      const responseFromApi = await fetch(`${backendIp}/api/result/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: username,
+          score,
+          age,
+          correctWords,
+          incorrectWords,
+          continuousSequence,
+        }),
+      });
+  
+      if (responseFromApi.status === 200) {
+        const data = await responseFromApi.json();
+        console.log("Response Data:", data);
+        setResponse(data);
+        return data; // Return the response data
+      } else {
+        const data = await responseFromApi.json();
+        console.error("Error Response:", data);
+        alert(data.message);
+      }
+    } catch (error) {
+      console.error('API Request failed:', error);
+      alert('An error occurred while fetching data.');
     }
   };
 
@@ -192,10 +182,10 @@ function Test() {
     let currentRowIndex = 0;
     let correctWords = []; // Array to store correct words
     let incorrectWords = []; // Array to store incorrect words
-
+  
     for (let i = 0; i < words.length; i++) {
       let word = words[i].toLowerCase();
-
+  
       // If the word exists in the current row, proceed
       if (wordsGrid[currentRowIndex] && wordsGrid[currentRowIndex].includes(word)) {
         score++;
@@ -204,7 +194,7 @@ function Test() {
       } else {
         // If the word doesn't exist in the current row, check next rows until it's found
         let foundInLaterRow = false;
-
+  
         for (let j = currentRowIndex + 1; j < wordsGrid.length; j++) {
           if (wordsGrid[j].includes(word)) {
             rowWise = false; // Found in a later row, which indicates column-wise reading
@@ -212,29 +202,30 @@ function Test() {
             break;
           }
         }
-
+  
         // If word is not found in any later rows, it might be an incorrect word (we ignore it)
         if (!foundInLaterRow) {
           incorrectWords.push(word); // Store incorrect words
           console.log(`Word "${word}" is either incorrect or out of expected order.`);
         }
-
+  
         // If found in a later row, break the loop and set score to zero
         if (!rowWise) {
           score = 0;
           break;
         }
       }
-
+  
       // Check if we need to move to the next row
       if (wordsGrid[currentRowIndex].indexOf(word) === wordsGrid[currentRowIndex].length - 1) {
         currentRowIndex++;
       }
     }
-
+  
     const tempAge = getReadingAge(score);
-    return { score, age: tempAge, correctWords, incorrectWords };
+    return { score, age: tempAge, correctWords, incorrectWords, continuousSequence: rowWise || false };
   };
+  
 
   return (
     <>
@@ -267,14 +258,15 @@ function Test() {
         </div>
       )}
       {!givingTest && response && (
-        <AfterTest
-          username={response ? response.name : ''}
-          score={response ? response.score : 0}
-          age={response ? response.age : 0}
-          correctWords={response ? response.correctWords : []}
-          incorrectWords={response ? response.incorrectWords : []}
-        />
-      )}
+  <AfterTest
+    username={username}
+    score={response.score}
+    age={age}
+    correctWords={response.correctWords}
+    incorrectWords={response.incorrectWords}
+    continuousSequence={response && response.continuousSequence}
+  />
+)}
     </>
   );
 }
