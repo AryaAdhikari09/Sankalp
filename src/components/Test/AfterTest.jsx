@@ -4,7 +4,26 @@ import { useNavigate } from "react-router-dom";
 
 // Ensure wordsGrid is imported or defined in this file
 const wordsGrid = [
-  // Your wordsGrid data here
+  ["tree", "little", "milk", "egg", "book"],            // Row 1
+  ["school", "sit", "frog", "playing", "bun"],          // Row 2
+  ["flower", "road", "clock", "train", "light"],        // Row 3
+  ["picture", "think", "summer", "people", "something"],// Row 4
+  ["dream", "downstairs", "biscuit", "shepherd", "thirsty"], // Row 5
+  ["crowd", "sandwich", "beginning", "postage", "island"],   // Row 6
+  ["saucer", "angel", "sailing", "appeared", "knife"],       // Row 7
+  ["canary", "attractive", "imagine", "nephew", "gradually"],// Row 8
+  ["smoulder", "applaud", "disposal", "nourished", "diseased"], // Row 9
+  ["university", "orchestra", "knowledge", "audience", "situated"], // Row 10
+  ["physics", "campaign", "choir", "intercede", "fascinate"], // Row 11
+  ["forfeit", "siege", "pavement", "plausible", "prophecy"],  // Row 12
+  ["colonel", "soloist", "systematic", "slovenly", "classification"], // Row 13
+  ["genuine", "institution", "pivot", "conscience", "heroic"], // Row 14
+  ["pneumonia", "preliminary", "antique", "susceptible", "enigma"],   // Row 15
+  ["oblivion", "scintillate", "satirical", "sabre", "beguile"],  // Row 16
+  ["terrestrial", "belligerent", "adamant", "sepulchre", "statistics"], // Row 17
+  ["miscellaneous", "procrastinate", "tyrannical", "evangelical", "grotesque"], // Row 18
+  ["ineradicable", "judicature", "preferential", "homonym", "fictitious"], // Row 19
+  ["rescind", "metamorphosis", "somnambulist", "bibliography", "idiosyncrasy"]  // Row 20
 ];
 
 const AfterTest = ({ username, score, age, correctWords, incorrectWords }) => {
@@ -16,14 +35,12 @@ const AfterTest = ({ username, score, age, correctWords, incorrectWords }) => {
     console.log("Received props:", { username, score, age, correctWords, incorrectWords });
   }, [username, score, age, correctWords, incorrectWords]);
 
-  // Calculate tableData with debugging
+  // Calculate tableData without continuous sequence
   const tableData = useMemo(() => {
-    const sequence = correctWords.every(word => wordsGrid.flat().includes(word));
-    console.log("Table Data Calculation:", { correctWords, incorrectWords, sequence, score });
+    console.log("Table Data Calculation:", { correctWords, incorrectWords, score });
     return {
       correctWords,
       incorrectWords,
-      continuousSequence: sequence,
       score: score,
     };
   }, [correctWords, incorrectWords, score]);
@@ -44,7 +61,6 @@ const AfterTest = ({ username, score, age, correctWords, incorrectWords }) => {
             <tr>
               <th>Correct Words</th>
               <th>Incorrect Words</th>
-              <th>Continuous Sequence</th>
               <th>Score</th>
             </tr>
           </thead>
@@ -52,7 +68,6 @@ const AfterTest = ({ username, score, age, correctWords, incorrectWords }) => {
             <tr>
               <td>{tableData.correctWords.join(", ")}</td>
               <td>{tableData.incorrectWords.join(", ")}</td>
-              <td>{tableData.continuousSequence ? "Yes" : "No"}</td>
               <td>{tableData.score}</td>
             </tr>
           </tbody>

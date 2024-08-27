@@ -30,8 +30,6 @@ function Test() {
   const [score, setScore] = useState(0);
   const [username, setUsername] = useState("");
 
-  // const [isMobile, setIsMobile] = useState(window.innerWidth);
-
   const navigate = useNavigate();
 
   const isMobile = window.innerWidth <= 768;
@@ -48,7 +46,7 @@ function Test() {
   }, [navigate]);
 
   const startListening = () =>
-    SpeechRecognition.startListening({ continuous: true, language: "en-IN" });
+    SpeechRecognition.startListening({ language: "en-IN" });
   const stopListening = () => SpeechRecognition.stopListening();
   const { transcript, browserSupportsSpeechRecognition, listening } =
     useSpeechRecognition();
@@ -59,35 +57,36 @@ function Test() {
 
   const [response, setResponse] = useState(null);
 
-  const handlesubmit = async () => {
-    console.log("Original Transcript:", transcript);
-    setGivingTest(false);
+const handlesubmit = async () => {
+  console.log("Original Transcript:", transcript);
+  setGivingTest(false);
 
-    // Split transcript into words
-    let arr = transcript.split(" ");
+  // Split transcript into words
+  let arr = transcript.split(" ");
 
-    // Filter out words that are entirely uppercase (likely spelled out)
-    arr = arr.filter((word) => {
-      if (word === word.toUpperCase()) {
-        console.log(`Spelt out word detected: ${word}, excluded.`);
-        return false;
-      }
-      return true;
-    });
+  // Filter out words that are entirely uppercase (likely spelled out)
+  arr = arr.filter((word) => {
+    if (word === word.toUpperCase()) {
+      console.log(`Spelt out word detected: ${word}, excluded.`);
+      return false;
+    }
+    return true;
+  });
 
-    // Clean up the remaining words
-    arr = arr.map((str) => str.replace(/[^a-zA-Z]/g, "").toLowerCase());
+  // Clean up the remaining words
+  arr = arr.map((str) => str.replace(/[^a-zA-Z]/g, "").toLowerCase());
 
-    console.log("Cleaned Words Array:", arr); // Debugging output
+  console.log("Cleaned Words Array:", arr); // Debugging output
 
-    // Proceed to check the remaining words
-    const { score, age, correctWords, incorrectWords } = await checkWords(arr);
+  // Proceed to check the remaining words
+  const { score, age, correctWords, incorrectWords } = await checkWords(arr);
 
-    setScore(score);
-    setAge(age);
-    console.log("Final Score:", score); // Log the final score
-    console.log("Reading Age:", age); // Log the reading age
+  setScore(score);
+  setAge(age);
+  console.log("Final Score:", score); // Log the final score
+  console.log("Reading Age:", age); // Log the reading age
 
+  try {
     const responseFromApi = await fetch(`${backendIp}/api/result/create`, {
       method: "POST",
       headers: {
@@ -107,34 +106,37 @@ function Test() {
       console.log("Response Data:", data); // Log the response data
       setResponse(data); // Set the response state
     } else {
-      const data = await responseFromApi.json();
-      console.error("Error Response:", data); // Log any error response
-      alert(data.message);
+      console.error("Error Response:", responseFromApi); // Log any error response
+      setResponse({ error: "Failed to submit test results" }); // Set error response state
     }
-  };
+  } catch (error) {
+    console.error("Error submitting test results:", error); // Log any error
+    setResponse({ error: "Failed to submit test results" }); // Set error response state
+  }
+};
 
-  const filterSpeltWords = (arr) => {
-    const filtered = [];
+  const checkWords = async (words) => {
+    let score = 0;
+    let correctWords = []; // Array to store correct words
+    let incorrectWords = []; // Array to store incorrect words
 
-    arr.forEach((word) => {
-      if (word.length > 1 && word === word.toLowerCase()) {
-        // If the word is more than one character and all lowercase, it's valid
-        filtered.push(word);
-      } else if (word.length > 1 && /^[A-Z]+$/.test(word)) {
-        // If the word is entirely uppercase, it's likely spelled out
-        console.log(`Spelt out word detected: ${word}, excluded as likely spelling`);
-      } else if (word.length > 1 && word[0] === word[0].toUpperCase() && word.slice(1) === word.slice(1).toLowerCase()) {
-        // If the word has the first letter capitalized and the rest lowercase, it's valid
-        filtered.push(word);
-      } else if (word.length === 1 && /^[A-Z]$/.test(word)) {
-        // If it's a single uppercase letter, likely part of spelling
-        console.log(`Single letter detected: ${word}, likely part of spelling`);
+    const flatWordsGrid = wordsGrid.flat();
+
+    for (let i = 0; i < words.length; i++) {
+      let word = words[i].toLowerCase();
+
+      if (flatWordsGrid.includes(word)) {
+        score++;
+        correctWords.push(word); // Store correct words
+        console.log(`Matched Word: ${word}, Current Score: ${score}`); // Log each matched word and the current score
       } else {
-        console.log(`Word detected: ${word}, excluded as likely spelling`);
+        incorrectWords.push(word); // Store incorrect words
+        console.log(`Word "${word}" is either incorrect or out of expected order.`);
       }
-    });
+    }
 
-    return filtered; // Only return the valid words
+    const tempAge = getReadingAge(score);
+    return { score, age: tempAge, correctWords, incorrectWords };
   };
 
   const getReadingAge = (score1) => {
@@ -144,98 +146,6 @@ function Test() {
     return match ? match.age : "N/A";
   };
 
-  const levenshteinDistance = (a, b) => {
-    const matrix = [];
-
-    for (let i = 0; i <= b.length; i++) {
-      matrix[i] = [i];
-    }
-
-    for (let j = 0; j <= a.length; j++) {
-      matrix[0][j] = j;
-    }
-
-    for (let i = 1; i <= b.length; i++) {
-      for (let j = 1; j <= a.length; j++) {
-        if (b.charAt(i - 1) === a.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1];
-        } else {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1, // substitution
-            Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1) // insertion or deletion
-          );
-        }
-      }
-    }
-
-    return matrix[b.length][a.length];
-  };
-
-  const findClosestMatch = (word, candidates) => {
-    let closestMatch = candidates[0];
-    let minDistance = levenshteinDistance(word, closestMatch);
-
-    candidates.forEach((candidate) => {
-      const distance = levenshteinDistance(word, candidate);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestMatch = candidate;
-      }
-    });
-
-    return closestMatch;
-  };
-
-  const checkWords = async (words) => {
-    let score = 0;
-    let rowWise = true; // Flag to check if the words are spoken row-wise
-    let currentRowIndex = 0;
-    let correctWords = []; // Array to store correct words
-    let incorrectWords = []; // Array to store incorrect words
-
-    for (let i = 0; i < words.length; i++) {
-      let word = words[i].toLowerCase();
-
-      // If the word exists in the current row, proceed
-      if (wordsGrid[currentRowIndex] && wordsGrid[currentRowIndex].includes(word)) {
-        score++;
-        correctWords.push(word); // Store correct words
-        console.log(`Matched Word: ${word}, Current Score: ${score}`); // Log each matched word and the current score
-      } else {
-        // If the word doesn't exist in the current row, check next rows until it's found
-        let foundInLaterRow = false;
-
-        for (let j = currentRowIndex + 1; j < wordsGrid.length; j++) {
-          if (wordsGrid[j].includes(word)) {
-            rowWise = false; // Found in a later row, which indicates column-wise reading
-            foundInLaterRow = true;
-            break;
-          }
-        }
-
-        // If word is not found in any later rows, it might be an incorrect word (we ignore it)
-        if (!foundInLaterRow) {
-          incorrectWords.push(word); // Store incorrect words
-          console.log(`Word "${word}" is either incorrect or out of expected order.`);
-        }
-
-        // If found in a later row, break the loop and set score to zero
-        if (!rowWise) {
-          score = 0;
-          break;
-        }
-      }
-
-      // Check if we need to move to the next row
-      if (wordsGrid[currentRowIndex].indexOf(word) === wordsGrid[currentRowIndex].length - 1) {
-        currentRowIndex++;
-      }
-    }
-
-    const tempAge = getReadingAge(score);
-    return { score, age: tempAge, correctWords, incorrectWords };
-  };
-
   return (
     <>
       {!isMobile && (
@@ -243,9 +153,8 @@ function Test() {
           {givingTest && (
             <div className={styles.testBox}>
               <p
-                className={`${styles.microphoneStatus} ${
-                  listening ? styles.micOn : styles.micOff
-                }`}
+                className={`${styles.microphoneStatus} ${listening ? styles.micOn : styles.micOff
+                  }`}
               >
                 Microphone is: {listening ? "on" : "off"}
               </p>
@@ -384,6 +293,7 @@ const readingAgeMap = [
   { score: 99, age: "12.6+" },
   { score: 100, age: "12.6+" },
 ];
+
 
 const wordsGrid = [
   ["tree", "little", "milk", "egg", "book"],            // Row 1
