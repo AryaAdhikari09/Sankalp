@@ -268,9 +268,9 @@ function Test() {
       )}
       {!givingTest && response && (
         <AfterTest
-          username={response ? response.name : ''}
+          username={username}
           score={response ? response.score : 0}
-          age={response ? response.age : 0}
+          age={age}
           correctWords={response ? response.correctWords : []}
           incorrectWords={response ? response.incorrectWords : []}
         />
