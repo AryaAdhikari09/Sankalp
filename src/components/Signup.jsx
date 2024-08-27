@@ -8,6 +8,11 @@ import { backendIp } from "../VALUE";
 const Signup = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [age, setAge] = useState("");
+  const [className, setClassName] = useState("");
+  const [parentEducation, setParentEducation] = useState("");
+  const [languages, setLanguages] = useState("");
 
   const navigate = useNavigate();
 
@@ -17,9 +22,17 @@ const Signup = () => {
     }
   }, [navigate]);
 
-  const handleLogin = async () => {
-    if (username?.length === 0 || password?.length === 0) {
-      alert("Please enter username and password");
+  const handleSignup = async () => {
+    if (
+      username?.length === 0 || 
+      password?.length === 0 || 
+      name?.length === 0 || 
+      age?.length === 0 || 
+      className?.length === 0 || 
+      parentEducation?.length === 0 || 
+      languages?.length === 0
+    ) {
+      alert("Please fill in all the required fields");
       return;
     }
 
@@ -28,7 +41,15 @@ const Signup = () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ 
+        username, 
+        password, 
+        name, 
+        age, 
+        class: className, 
+        parentEducation, 
+        languages 
+      }),
     });
 
     if (response.status === 200) {
@@ -48,6 +69,51 @@ const Signup = () => {
       <div className={styles.loginBox}>
         <h1>Signup</h1>
         <div>
+          <label htmlFor="name">Name</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          
+          <label htmlFor="age">Age</label>
+          <input
+            type="text"
+            id="age"
+            name="age"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+          />
+          
+          <label htmlFor="class">Class</label>
+          <input
+            type="text"
+            id="class"
+            name="class"
+            value={className}
+            onChange={(e) => setClassName(e.target.value)}
+          />
+          
+          <label htmlFor="parentEducation">Educational Qualification of Parents</label>
+          <input
+            type="text"
+            id="parentEducation"
+            name="parentEducation"
+            value={parentEducation}
+            onChange={(e) => setParentEducation(e.target.value)}
+          />
+          
+          <label htmlFor="languages">Spoken Languages</label>
+          <input
+            type="text"
+            id="languages"
+            name="languages"
+            value={languages}
+            onChange={(e) => setLanguages(e.target.value)}
+          />
+
           <label htmlFor="username">Username</label>
           <input
             type="text"
@@ -56,6 +122,7 @@ const Signup = () => {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
+          
           <label htmlFor="password">Password</label>
           <input
             type="password"
@@ -64,7 +131,8 @@ const Signup = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <button onClick={handleLogin}>Create Account</button>
+          
+          <button onClick={handleSignup}>Create Account</button>
         </div>
       </div>
     </div>
